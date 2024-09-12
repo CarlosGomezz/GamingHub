@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  #Frontend de next.js-React
+  frontend:
+    build:
+      context: ./Frontend/gaming-hub
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend:/var/www/html
+    environment:
+      - NODE_ENV=development
+
+  #Backend de Laravel
+  backend:
+    build:
+      context: ./Backend/gaming-hub-laravel
+      dockerfile: Dockerfile
+    ports:
+      - '8000:80'
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=daw.inspedralbes.cat
+      - DB_PORT=3306
+      - DB_DATABASE=a21cargomfue_gamingHub
+      - DB_USERNAME=a21cargomfue_gamingHub
+      - DB_PASSWORD=
+    # depends_on:
+    #   - db
+
+  #Base de datos
+  db:
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 11032570cZ
+      MYSQL_DATABASE: a21cargomfue_gamingHub
+      MYSQL_USER: a21cargomfue_gamingHub
+      MYSQL_PASSWORD: 11032570cZ
+    ports:
+      - '3306:3306'
+
+volumes:
+  db_data:
