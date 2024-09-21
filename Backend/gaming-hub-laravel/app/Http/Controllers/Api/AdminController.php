@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 
 
 class AdminController extends Controller
@@ -65,25 +66,30 @@ class AdminController extends Controller
 
     public function loginAdmin(Request $request)
     {
+        // Validar las credenciales
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
         ]);
-
-        // Buscar el usuario por su correo electrónico
-        $admin = Admin::where('email', $credentials['email'])->first();
-
-        // Verificar si el usuario existe y si la contraseña coincide
-        if ($admin && Hash::check($credentials['password'], $admin->password)) {
-            // Autenticación exitosa, crear token de acceso personal
-            $token = $admin->createToken('token')->plainTextToken;
-            return response([$token, $admin, 'isLoggedIn' => true]);
+    
+        // Intentar autenticar al administrador
+        if (Auth::guard('admin')->attempt($credentials)) {
+            // Autenticación exitosa, generar token de acceso personal
+            $admin = Auth::guard('admin')->user();
+            $token = $admin->createToken('admin-token')->plainTextToken;
+    
+            return response()->json([
+                'message' => 'Login successful',
+                'token' => $token,
+                'isLoggedIn' => true
+            ], 200);
         } else {
             // Autenticación fallida
-            return response(['isLoggedIn' => false]);
+            return response()->json([
+                'message' => 'Login failed, invalid credentials',
+                'isLoggedIn' => false
+            ], 401);
         }
-
-            // return response('jajajaj');
-
     }
+    
 }
