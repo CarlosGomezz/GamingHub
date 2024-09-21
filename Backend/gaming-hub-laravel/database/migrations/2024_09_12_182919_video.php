@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('video', function (Blueprint $table) {
+        Schema::create('videos', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('content_creator_id');
             $table->string('title');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('likes');
             $table->string('dislikes');
 
-            $table->foreign('content_creator_id')->references('id')->on('content_creator');
+            $table->foreign('content_creator_id')->references('id')->on('content_creators');
 
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('video');
+        Schema::dropIfExists('videos');
     }
 };

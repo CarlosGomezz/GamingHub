@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('video_id'); // Relación con la tabla video
-            $table->string('author')->nullable(); // Nombre del autor del comentario (puedes ajustar esto según tu estructura de usuarios)
+            $table->string('author'); // Nombre del autor del comentario (puedes ajustar esto según tu estructura de usuarios)
             $table->text('comment'); // El contenido del comentario
             $table->timestamps(); // Guarda la fecha de creación y actualización
             $table->softDeletes(); // (Opcional) Para permitir eliminar comentarios sin borrarlos realmente
         
             // Foreign key constraint
-            $table->foreign('video_id')->references('id')->on('video');
+            $table->foreign('video_id')->references('id')->on('videos');
         });
     }
 
@@ -29,6 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('comments');
+        
     }
 };

@@ -6,39 +6,62 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\QueryException;
 
 
 class AdminController extends Controller
 {
-    public function signinAdmin(Request $request)
+    public function signupAdmin(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'surname' => 'required',
-            'secondSurname' => 'required',
-            'username' => 'required',
-            'email' => 'required|email|unique:admins',
-            'password' => 'required',
+        // Validación de los campos
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'surname' => 'required|string|max:255',
+            'secondSurname' => 'required|string|max:255',
+            'username' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $admin = new Admin;
-        $admin->name = $request->name;
-        $admin->surname = $request->surname;
-        $admin->secondSurname = $request->secondSurname;
-        $admin->username = $request->assignedLocation;
-        $admin->email = $request->email;
-        $admin->password = Hash::make($request->password);
-
-        try {
-            if ($admin->save()) {
-                $message = "Registered correctly.";
-                return response()->json([$message, 200, 'isRegistered' => true]);
-            }
-        } catch (QueryException $ex) {
-            $message = "Couldn't register.";
-            return response()->json([$message, 500, 'isRegistered' => false]);
+        // Verificar si el username ya existe
+        $usernameExists = Admin::where('username', $validatedData['username'])->exists();
+        if ($usernameExists) {
+            return response()->json([
+                'message' => 'Username already exists.',
+                'status' => 400,
+                'isRegistered' => false
+            ], 400);
         }
+
+        // Verificar si el email ya existe
+        $emailExists = Admin::where('email', $validatedData['email'])->exists();
+        if ($emailExists) {
+            return response()->json([
+                'message' => 'Email already exists.',
+                'status' => 400,
+                'isRegistered' => false
+            ], 400);
+        }
+
+        // Creación del nuevo administrador
+        $admin = new Admin;
+        $admin->name = $validatedData['name'];
+        $admin->surname = $validatedData['surname'];
+        $admin->secondSurname = $validatedData['secondSurname'];
+        $admin->username = $validatedData['username'];
+        $admin->email = $validatedData['email'];
+        $admin->password = Hash::make($validatedData['password']); // Hashear la contraseña
+
+        $admin->save();
+
+        return response()->json([
+            'message' => 'Registered correctly.',
+            'status' => 200,
+            'isRegistered' => true
+        ], 200);
     }
+
+
 
     public function loginAdmin(Request $request)
     {
@@ -48,16 +71,19 @@ class AdminController extends Controller
         ]);
 
         // Buscar el usuario por su correo electrónico
-        $user = Admin::where('email', $credentials['email'])->first();
+        $admin = Admin::where('email', $credentials['email'])->first();
 
         // Verificar si el usuario existe y si la contraseña coincide
-        if ($user && Hash::check($credentials['password'], $user->password)) {
+        if ($admin && Hash::check($credentials['password'], $admin->password)) {
             // Autenticación exitosa, crear token de acceso personal
-            $token = $user->createToken('token')->plainTextToken;
-            return response([$token, $user, 'isLoggedIn' => true]);
+            $token = $admin->createToken('token')->plainTextToken;
+            return response([$token, $admin, 'isLoggedIn' => true]);
         } else {
             // Autenticación fallida
             return response(['isLoggedIn' => false]);
         }
+
+            // return response('jajajaj');
+
     }
 }
