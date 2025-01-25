@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\VideoController;
 
 
 
@@ -17,6 +18,9 @@ Route::middleware('admin')->group(function () {
     
 });
 Route::post('/loginAdmin', [AdminController::class, 'loginAdmin']);
+
+Route::post('/uploadVideo', [VideoController::class, 'uploadVideo']);
+
 // Route::get('loginAdmin', [ 'as' => 'loginAdmin', 'uses' => [AdminController::class, 'loginAdmin']]);
 
 // ADMIN CONTROLLER

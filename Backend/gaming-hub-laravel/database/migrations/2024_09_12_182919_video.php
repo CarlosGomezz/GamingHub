@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('videos', function (Blueprint $table) {
             $table->id();
+            $table->binary('video_data');
             $table->unsignedBigInteger('content_creator_id');
             $table->string('title');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->date('date');
             // $table->string('comments');
             $table->string('likes');
