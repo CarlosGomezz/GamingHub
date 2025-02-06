@@ -57,7 +57,6 @@ const UploadVideo: React.FC = () => {
 
             //   const response = await fetch('http://localhost:3001/uploadVideo', {
             const response = await fetch(`${laravelURL}/api/uploadVideo`, {
-
                 method: 'POST',
                 body: formData,
             });
