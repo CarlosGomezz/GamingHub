@@ -18,9 +18,10 @@ return new class extends Migration
             $table->string('title');
             $table->string('description')->nullable();
             $table->date('date');
-            // $table->string('comments');
-            $table->string('likes');
-            $table->string('dislikes');
+            $table->string('video_path');
+            $table->string('likes')->nullable();
+            $table->string('dislikes')->nullable();
+            $table->timestamps();
 
             $table->foreign('content_creator_id')->references('id')->on('content_creators');
 
