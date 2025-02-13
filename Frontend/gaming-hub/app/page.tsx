@@ -72,6 +72,7 @@ export default function Home() {
                 {/* <p className="text-lg text-center">Welcome to Gaming Hub</p> */}
             </div>
 
+            {/* BOTÓN DE SUBIR VÍDEO */}
             <Link
                 href={{
                     pathname: `/uploadVideo`, // Ajustamos para usar el ID en la ruta
@@ -81,6 +82,19 @@ export default function Home() {
             >
                 <div>
                     <h2>SUBIR VIDEO</h2>
+                </div>
+            </Link>
+
+            {/* BOTÓN DE REPRODUCIR VÍDEO */}
+            <Link
+                href={{
+                    pathname: `/playVideo`, // Ajustamos para usar el ID en la ruta
+                }}
+                // onClick={() => showGameModal(game)}
+                className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
+            >
+                <div>
+                    <h2> REPRODUCIR VIDEO</h2>
                 </div>
             </Link>
 
