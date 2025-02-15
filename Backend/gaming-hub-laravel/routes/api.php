@@ -20,6 +20,8 @@ Route::middleware('admin')->group(function () {
 Route::post('/loginAdmin', [AdminController::class, 'loginAdmin']);
 
 Route::post('/uploadVideo', [VideoController::class, 'uploadVideo']);
+Route::get('/listVideos', [VideoController::class, 'listVideos']);
+
 
 // Route::get('loginAdmin', [ 'as' => 'loginAdmin', 'uses' => [AdminController::class, 'loginAdmin']]);
 

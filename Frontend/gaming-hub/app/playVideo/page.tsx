@@ -1,7 +1,20 @@
 // pages/uploadVideo.tsx
-'use client'
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface Video {
+    id: number;
+    video_data: File;
+    content_creator_id: number;
+    title: string;
+    description?: string;
+    date: Date;
+    video_path: string;
+    likes: number;
+    dislikes: number;
+}
 
 const PlayVideo: React.FC = () => {
     const laravelURL = process.env.NEXT_PUBLIC_LARAVEL_URL;
@@ -9,77 +22,96 @@ const PlayVideo: React.FC = () => {
     const [videoTitle, setVideoTitle] = useState<string>("");
     const [videoDescription, setVideoDescription] = useState<string>("");
     const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];  // Formato YYYY-MM-DD
-    const [videoDate, setVideoDate] = useState<string>(formattedDate);  // El estado debe ser de tipo string
+    const formattedDate = today.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+    const [videoDate, setVideoDate] = useState<string>(formattedDate); // El estado debe ser de tipo string
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [uploadStatus, setUploadStatus] = useState<string>('');
+    //   const [videosList, setVideosList] = useState<File | null>(null);
+    const [videosList, setVideosList] = useState<Video[]>([]);
 
-    /**
-     * 
-     * @param e Función saber cuando hay un cambio a la hora de elegir el archivo
-     */
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setSelectedFile(e.target.files[0]);
-        }
-    };
+    const [uploadStatus, setUploadStatus] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
-
-    /**
-     * 
-     * @param e Función para subir el vídeo a la BBDD
-     * @returns 
-     */
-    const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (!selectedFile) {
-            setUploadStatus('Please select a video.');
-            return;
-        }
-        setVideoCreatorId(1); // PUESTO DE MANERA PROVISIONAL
-
-        const formData = new FormData();
-        formData.append('video_data', selectedFile);
-        formData.append('content_creator_id', String(videoCreatorId));
-        formData.append('title', videoTitle);
-        formData.append('description', videoDescription);
-        formData.append('date', videoDate);
-
-        formData.forEach((value, key) => {
-            console.log(`${key}:`, value);
-        });
-
+    const fetchVideos = async () => {
+        setLoading(true);
+        setError(null); // Reset any previous error
 
         try {
-            console.log(laravelURL + '/api/uploadVideo');
-
-            //   const response = await fetch('http://localhost:3001/uploadVideo', {
-            const response = await fetch(`${laravelURL}/api/uploadVideo`, {
-                method: 'POST',
-                body: formData,
+            const response = await fetch(`${laravelURL}/api/listVideos`, {
+                method: "GET",
+                // mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json",
+                },
             });
 
-            // Check if response is OK (status 200-299)
-            if (response.ok) {
-                const result = await response.json(); // Assuming the backend responds with JSON
-                setUploadStatus('Video uploaded successfully.');
-                console.log('Uploaded file:', result); // Optionally log the file info
-            } else {
-                const errorData = await response.json();
-                setUploadStatus(`Failed to upload video: ${errorData.error || 'Unknown error'}`);
+            console.log(laravelURL + "/api/listVideos");
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch data");
             }
+
+            const data = await response.json();
+            setVideosList(data);
+
+            console.log(data);
         } catch (error) {
-            setUploadStatus('Error occurred while uploading.');
-            console.error('Upload error:', error);
+            console.error("Error fetching data:", error);
+            setError("Failed to list videos");
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchVideos();
+    }, []);
+
     return (
-        <div>
-            <h1>Play Video</h1>
-            
+        <div className="flex flex-col items-center min-h-screen p-8">
+            <h1 className="text-4xl font-bold mb-8">Play Video</h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+                {videosList.map((video: Video, id) => (
+                    <Link
+                        href={{
+                            pathname: `/${video.id}`, // Ajustamos para usar el ID en la ruta
+                        }}
+                        // onClick={() => playVideo(game)}
+                        key={id}
+                        // className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
+                    >
+                        <div
+                            // onClick={() => playVideo(video)}
+                            key={id}
+                            className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 p-6"
+                        >
+                            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                                {video.title}
+                            </h2>
+
+                            <div className="w-full aspect-video overflow-hidden rounded-xl mb-4">
+                                <video
+                                    controls
+                                    className="w-full h-full object-cover rounded-xl"
+                                >
+                                    <source
+                                        src={video.video_path}
+                                        type="video/mp4"
+                                    />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+
+                            {video.description && (
+                                <p className="text-gray-700 text-base leading-relaxed">
+                                    {video.description}
+                                </p>
+                            )}
+                        </div>
+                    </Link>
+                ))}
+            </div>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 interface GameDetails {
     id: number;
@@ -16,11 +16,14 @@ interface GameEditions {
     background_image: string;
 }
 
-export default function GameDetails({ params }: { params: { [key: string]: string } }) {
+export default function GameDetails({
+    params,
+}: {
+    params: { [key: string]: string };
+}) {
     const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
     // const [gameEditions, setGameEditions] = useState<GameEditions>();
     const [gameEditions, setGameEditions] = useState<GameEditions[]>([]);
-
 
     const [error, setError] = useState<string | null>(null);
 
@@ -30,22 +33,25 @@ export default function GameDetails({ params }: { params: { [key: string]: strin
          */
         async function getGameDetails() {
             try {
-                const response = await fetch(`https://api.rawg.io/api/games/${params.gameId}?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
+                const response = await fetch(
+                    `https://api.rawg.io/api/games/${params.gameId}?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch data');
+                    throw new Error("Failed to fetch data");
                 }
 
                 const data = await response.json();
                 setGameDetails(data); // Guarda el objeto de detalles directamente
             } catch (error) {
-                console.error('Error fetching data:', error);
-                setError('Failed to load game details');
+                console.error("Error fetching data:", error);
+                setError("Failed to load game details");
             }
         }
 
@@ -54,31 +60,32 @@ export default function GameDetails({ params }: { params: { [key: string]: strin
          */
         async function getGameEditions() {
             try {
-                const response = await fetch(`https://api.rawg.io/api/games/${params.gameId}/additions?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
+                const response = await fetch(
+                    `https://api.rawg.io/api/games/${params.gameId}/additions?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch data');
+                    throw new Error("Failed to fetch data");
                 }
-
 
                 const data = await response.json();
                 console.log("LAS EDICIONES DEL VIDEOJUEGO: ", data);
 
                 setGameEditions(data.results || []); // Guarda el objeto de detalles directamente
             } catch (error) {
-                console.error('Error fetching data:', error);
-                setError('Failed to load game details');
+                console.error("Error fetching data:", error);
+                setError("Failed to load game details");
             }
         }
 
         getGameDetails();
         getGameEditions();
-
     }, [params.gameId]); // Dependencia actualizada para ejecutar el efecto al cambiar el ID del juego
 
     // Mostrar mientras carga o si hay un error
@@ -93,6 +100,8 @@ export default function GameDetails({ params }: { params: { [key: string]: strin
             <br></br>
 
             <h3 className="text-3xl font-bold">{gameDetails.name}</h3>
+            <h3 className="text-3xl font-bold">{gameDetails.id}</h3>
+
             <Image
                 src={gameDetails.background_image}
                 alt={gameDetails.name}
@@ -113,7 +122,10 @@ export default function GameDetails({ params }: { params: { [key: string]: strin
 
             {gameEditions.length > 0 ? (
                 gameEditions.map((edition) => (
-                    <div key={edition.id} className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer">
+                    <div
+                        key={edition.id}
+                        className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
+                    >
                         <p>{edition.name}</p>
                         {edition.background_image ? (
                             <Image
@@ -134,8 +146,6 @@ export default function GameDetails({ params }: { params: { [key: string]: strin
             ) : (
                 <p>No editions available</p>
             )}
-
-
         </main>
     );
 }
