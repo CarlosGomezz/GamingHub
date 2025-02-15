@@ -90,7 +90,7 @@ export default function Home() {
             {/* BOTÓN DE REPRODUCIR VÍDEO */}
             <Link
                 href={{
-                    pathname: `/playVideo`, // Ajustamos para usar el ID en la ruta
+                    pathname: `/listVideos`, // Ajustamos para usar el ID en la ruta
                 }}
                 // onClick={() => showGameModal(game)}
                 className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
@@ -106,7 +106,7 @@ export default function Home() {
                 {allGames.map((game, id) => (
                     <Link
                         href={{
-                            pathname: `/${game.id}`, // Ajustamos para usar el ID en la ruta
+                            pathname: `/games/${game.id}`, // Ajustamos para usar el ID en la ruta
                         }}
                         onClick={() => showGameModal(game)}
                         key={id}

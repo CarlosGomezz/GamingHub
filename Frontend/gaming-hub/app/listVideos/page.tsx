@@ -75,17 +75,13 @@ const PlayVideo: React.FC = () => {
                 {videosList.map((video: Video, id) => (
                     <Link
                         href={{
-                            pathname: `/${video.id}`, // Ajustamos para usar el ID en la ruta
+                            pathname: `/videos/${video.id}`,
                         }}
-                        // onClick={() => playVideo(game)}
-                        key={id}
-                        // className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
+                        as={`/videos/${video.id}`}
+                        key={video.id}
+                        passHref
                     >
-                        <div
-                            // onClick={() => playVideo(video)}
-                            key={id}
-                            className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 p-6"
-                        >
+                        <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 p-6">
                             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                                 {video.title}
                             </h2>

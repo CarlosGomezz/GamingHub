@@ -21,6 +21,7 @@ Route::post('/loginAdmin', [AdminController::class, 'loginAdmin']);
 
 Route::post('/uploadVideo', [VideoController::class, 'uploadVideo']);
 Route::get('/listVideos', [VideoController::class, 'listVideos']);
+Route::post('/returnVideo', [VideoController::class, 'returnVideo']);
 
 
 // Route::get('loginAdmin', [ 'as' => 'loginAdmin', 'uses' => [AdminController::class, 'loginAdmin']]);

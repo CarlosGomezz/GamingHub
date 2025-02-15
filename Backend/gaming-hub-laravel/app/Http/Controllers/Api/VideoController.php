@@ -88,4 +88,22 @@ class VideoController extends Controller
         return response()->json($videos, 200);
     }
 
+    public function returnVideo(Request $request) {
+        // Buscar el video por ID
+        $videoId = $request->videoId;
+
+        $video = Video::find($videoId);
+
+        // Si no existe, devolver un error 404
+        if (!$video) {
+            return response()->json([
+                'message' => 'Video not found'
+            ], 404);
+        }
+
+        // Devolver el video en formato JSON
+        return response()->json($video, 200);
+    }
+
+
 }
