@@ -22,7 +22,8 @@ class VideoController extends Controller
         // Validación de los datos de entrada
         $validatedData = $request->validate([
             'video_data' => 'required|file|mimes:mp4,avi,mkv,mov,flv|max:102400',
-            'content_creator_id' => 'required|string|max:255',
+            'creator' => 'required|string|max:255',
+            'game' => 'required|integer|min:1',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'date' => 'required|date|date_format:Y-m-d',
@@ -42,7 +43,8 @@ class VideoController extends Controller
 
             // Creación del modelo Video
             $video = new Video();
-            $video->content_creator_id = $validatedData['content_creator_id'];
+            $video->creator = $validatedData['creator'];
+            $video->game = $validatedData['game'];
             $video->title = $validatedData['title'];
             $video->description = $validatedData['description'] ?? null;
             $video->date = $validatedData['date'];
@@ -85,6 +87,22 @@ class VideoController extends Controller
     public function listVideos(Request $request){
         $videos = Video::all();
 
+        return response()->json($videos, 200);
+    }
+
+    public function listVideosGame(Request $request) {
+        // Buscar el video por ID
+        $gameId = $request->gameId;
+        $videos = Video::where('game', $gameId)->get();
+
+        // Si no hay videos, devolver un error 404
+        if ($videos->isEmpty()) {
+            return response()->json([
+                'message' => 'No uploaded videos'
+            ], 404);
+        }
+
+        // Devolver el video en formato JSON
         return response()->json($videos, 200);
     }
 

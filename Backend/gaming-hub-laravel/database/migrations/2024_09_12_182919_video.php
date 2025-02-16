@@ -14,16 +14,17 @@ return new class extends Migration
         Schema::create('videos', function (Blueprint $table) {
             $table->id();
             $table->binary('video_data');
-            $table->unsignedBigInteger('content_creator_id');
+            $table->unsignedBigInteger('creator');
             $table->string('title');
             $table->string('description')->nullable();
+            $table->unsignedBigInteger('game');
             $table->date('date');
             $table->string('video_path');
             $table->string('likes')->nullable();
             $table->string('dislikes')->nullable();
             $table->timestamps();
 
-            $table->foreign('content_creator_id')->references('id')->on('content_creators');
+            $table->foreign('creator')->references('id')->on('users');
 
         });
     }

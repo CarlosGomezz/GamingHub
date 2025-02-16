@@ -55,10 +55,6 @@ export default function Home() {
         fetchGames(); // Fetch initial games on component mount
     }, []);
 
-    const showGameModal = (game: Game) => {
-        console.log("ESTE ES EL GAME: ", game);
-    };
-
     return (
         <main className="">
             <h1 className="text-4xl font-bold text-center pb-10 p-5">
@@ -73,19 +69,6 @@ export default function Home() {
                 /> */}
                 {/* <p className="text-lg text-center">Welcome to Gaming Hub</p> */}
             </div>
-
-            {/* BOTÓN DE SUBIR VÍDEO */}
-            <Link
-                href={{
-                    pathname: `/uploadVideo`, // Ajustamos para usar el ID en la ruta
-                }}
-                // onClick={() => showGameModal(game)}
-                className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
-            >
-                <div>
-                    <h2>SUBIR VIDEO</h2>
-                </div>
-            </Link>
 
             {/* BOTÓN DE REPRODUCIR VÍDEO */}
             <Link
@@ -108,7 +91,6 @@ export default function Home() {
                         href={{
                             pathname: `/games/${game.id}`, // Ajustamos para usar el ID en la ruta
                         }}
-                        onClick={() => showGameModal(game)}
                         key={id}
                         className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
                     >

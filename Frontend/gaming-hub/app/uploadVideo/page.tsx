@@ -2,9 +2,17 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const UploadVideo: React.FC = () => {
     const laravelURL = process.env.NEXT_PUBLIC_LARAVEL_URL;
+
+    // Para conseguir los parámtetros que le paso desde [gameId]
+    const searchParams = useSearchParams();
+    const paramsGameId = searchParams.get("gameId"); // Esto es un string
+    const gameId = paramsGameId ? Number(paramsGameId) : null; // Convertir a número
+    console.log("JUEGASO: ", gameId);
+
     const [videoCreatorId, setVideoCreatorId] = useState<number | null>(1);
     const [videoTitle, setVideoTitle] = useState<string>("");
     const [videoDescription, setVideoDescription] = useState<string>("");
@@ -41,7 +49,8 @@ const UploadVideo: React.FC = () => {
 
         const formData = new FormData();
         formData.append("video_data", selectedFile);
-        formData.append("content_creator_id", String(videoCreatorId));
+        formData.append("game", String(gameId));
+        formData.append("creator", String(videoCreatorId));
         formData.append("title", videoTitle);
         formData.append("description", videoDescription);
         formData.append("date", videoDate);

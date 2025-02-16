@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 
 interface Video {
     id: number;
-    content_creator_id: number;
+    creator: number;
+    game: number;
     title: string;
     description?: string;
     date: Date;
