@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import DOMPurify from "dompurify";
 
 interface GameDetails {
     id: number;
@@ -16,6 +17,7 @@ interface GameEditions {
     name: string;
     background_image: string;
 }
+
 interface Video {
     id: number;
     creator: number;
@@ -34,163 +36,123 @@ export default function GameDetails({
     params: { [key: string]: string };
 }) {
     const laravelURL = process.env.NEXT_PUBLIC_LARAVEL_URL;
-
     const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
-    // const [gameEditions, setGameEditions] = useState<GameEditions>();
+    const [fullDescription, setFullDescription] = useState<string>("");
+    const [showFullDescription, setShowFullDescription] = useState(false);
     const [gameEditions, setGameEditions] = useState<GameEditions[]>([]);
     const [uploadedVideos, setUploadedVideos] = useState<Video[]>([]);
-
     const [error, setError] = useState<string | null>(null);
 
+    const toggleDescription = () => setShowFullDescription((prev) => !prev);
+
+    function sanitizeDescription(description: string) {
+        return DOMPurify.sanitize(description, { ALLOWED_TAGS: [] });
+    }
+
     useEffect(() => {
-        /**
-         * FUNCIÓN PARA CONSEGUIR LOS DETALLES PRINCIPALES DEL VIDEOJUEGO
-         */
-        async function getGameDetails() {
+        async function fetchGameDetails() {
             try {
                 const response = await fetch(
-                    `https://api.rawg.io/api/games/${params.gameId}?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
+                    `https://api.rawg.io/api/games/${params.gameId}?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`
                 );
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data");
-                }
-
+                if (!response.ok)
+                    throw new Error("Failed to fetch game details");
                 const data = await response.json();
-                setGameDetails(data); // Guarda el objeto de detalles directamente
-                console.log("DATA: ", data.id);
-
-                getGamesUploadedVideos(data.id);
+                setGameDetails(data);
+                setFullDescription(sanitizeDescription(data.description));
+                fetchUploadedVideos(data.id);
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error(error);
                 setError("Failed to load game details");
             }
         }
 
-        /**
-         * FUNCIÓN PARA CONSEGUIR TODAS LAS EDICIONES, DLCs, GOTY... DEL VIDEOJUEGO
-         */
-        async function getGameEditions() {
+        async function fetchGameEditions() {
             try {
                 const response = await fetch(
-                    `https://api.rawg.io/api/games/${params.gameId}/additions?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
+                    `https://api.rawg.io/api/games/${params.gameId}/additions?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`
                 );
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data");
-                }
-
+                if (!response.ok)
+                    throw new Error("Failed to fetch game editions");
                 const data = await response.json();
-                // console.log("LAS EDICIONES DEL VIDEOJUEGO: ", data);
-
-                setGameEditions(data.results || []); // Guarda el objeto de detalles directamente
+                setGameEditions(data.results || []);
             } catch (error) {
-                console.error("Error fetching data:", error);
-                setError("Failed to load game details");
+                console.error(error);
+                setError("Failed to load game editions");
             }
         }
 
-        /**
-         * FUNCIÓN PARA CONSEGUIR TODOS LOS VÍDEOS QUE HAY SUBIDOS DEL JUEGO SELECCIONADO
-         */
-        async function getGamesUploadedVideos(gameId: Number) {
+        async function fetchUploadedVideos(gameId: number) {
             try {
                 const response = await fetch(
                     `${laravelURL}/api/listVideosGame`,
                     {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ gameId }),
                     }
                 );
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data");
-                }
+                if (!response.ok)
+                    throw new Error("Failed to fetch uploaded videos");
 
                 const data = await response.json();
                 setUploadedVideos(data);
-                // console.log("LAS EDICIONES DEL VIDEOJUEGO: ", data);
-
-                // setGameEditions(data.results || []); // Guarda el objeto de detalles directamente
             } catch (error) {
-                console.error("Error fetching data:", error);
-                setError("Failed to load game details");
+                console.error(error);
+                setError("Failed to load uploaded videos");
             }
         }
 
-        getGameDetails();
-        getGameEditions();
-        // getGamesUploadedVideos();
-    }, [params.gameId]); // Dependencia actualizada para ejecutar el efecto al cambiar el ID del juego
+        fetchGameDetails();
+        fetchGameEditions();
+    }, [params.gameId]);
 
-    // Mostrar mientras carga o si hay un error
     if (error) return <p className="text-red-500">{error}</p>;
     if (!gameDetails) return <p>Loading...</p>;
 
-    // Mostrar los detalles del juego cuando estén disponibles
     return (
         <main className="text-white bg-gray-950 p-2">
-            {/* Sección de detalles del juego */}
             <section className="w-full h-1/3 space-y-4">
-                {/* <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 mb-10 text-center">
-                    GAME DETAILS
-                </h1> */}
-
-                {/* <div className="space-y-6"> */}
-                {/* <h3 className="text-lg font-semibold text-gray-400">
-                    ID: {gameDetails.id}
-                    </h3> */}
-
-                <div className="relative w-full h-full bg-red-500 rounded-xl  shadow-xl">
+                <div className="relative w-full h-full bg-red-500 rounded-xl shadow-xl">
                     <img
                         src={gameDetails.background_image}
                         alt={gameDetails.name}
                         className="w-full h-full rounded-xl transition-transform duration-300 hover:scale-105"
                     />
                 </div>
-
-                <h2 className="text-4xl font-bold text-gray-100">
+                <h2 className="text-2xl font-bold text-gray-100">
                     {gameDetails.name}
                 </h2>
-
-                <p className="text-lg font-medium text-gray-400 mt-4">
+                <p className="text-md font-medium text-gray-400 mt-4">
                     Released:{" "}
                     <span className="font-semibold text-gray-200">
                         {gameDetails.released}
                     </span>
                 </p>
 
-                <p className="text-lg text-gray-300 leading-relaxed mt-6">
-                    {gameDetails.description}
-                </p>
-
-                {/* </div> */}
+                {/* DESCRIPCIÓN */}
+                <div className="">
+                    <p className="text-lg text-gray-300 leading-relaxed mt-6">
+                        {showFullDescription
+                            ? fullDescription
+                            : fullDescription.slice(0, 300) + "..."}
+                    </p>
+                    {/* BOTÓN PARA EXPANDIR Y O REDUCIR LA DESCRIPCIÓN */}
+                    {fullDescription.length > 300 && (
+                        <button
+                            onClick={toggleDescription}
+                            className="text-blue-400 hover:text-blue-300 transition font-semibold mt-2"
+                        >
+                            {showFullDescription ? "Read less" : "Read more"}
+                        </button>
+                    )}
+                </div>
             </section>
-
-            {/* Separador estilizado */}
             <div className="my-12 border-t border-gray-800 mx-auto w-3/4"></div>
-
-            {/* Sección de ediciones */}
             <section className="max-w-6xl mx-auto">
                 <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
                     EDITIONS
                 </h1>
-
                 {gameEditions.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                         {gameEditions.map((edition) => (
@@ -200,11 +162,11 @@ export default function GameDetails({
                             >
                                 <div className="relative h-56 w-full">
                                     {edition.background_image ? (
-                                        <Image
+                                        <img
                                             src={edition.background_image}
                                             alt={edition.name}
-                                            layout="fill"
-                                            objectFit="cover"
+                                            // layout="fill"
+                                            // objectFit="cover"
                                             className="rounded-t-xl"
                                         />
                                     ) : (
@@ -227,54 +189,37 @@ export default function GameDetails({
                     </p>
                 )}
             </section>
-
-            <section>
-                <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mt-10 mb-10 text-center">
-                    UPLOAD VIDEO
-                </h1>
-
-                {/* BOTÓN DE SUBIR VÍDEO */}
-                <Link
-                    href={{
-                        pathname: `/uploadVideo`, // Ajustamos para usar el ID en la ruta
-                        query: { gameId: gameDetails.id }, // Parámetros que pasas
-                    }}
-                    // onClick={() => showGameModal(game)}
-                    className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
-                >
-                    <div>
-                        <h2>SUBIR VIDEO</h2>
-                    </div>
-                </Link>
-            </section>
-
             <section>
                 <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mt-10 mb-10 text-center">
                     UPLOADED VIDEOS
                 </h1>
-                {uploadedVideos.map((video, id) => (
-                    <div key={id}>
-                        <h1 className="text-4xl font-bold mb-8">
-                            {video.title}
-                        </h1>
-
-                        <div className="w-full max-w-3xl">
-                            <video controls className="w-full rounded-xl">
-                                <source
-                                    src={video.video_path}
-                                    type="video/mp4"
-                                />
-                                Your browser does not support the video tag.
-                            </video>
-
-                            {video.description && (
-                                <p className="text-gray-700 text-lg mt-4">
-                                    {video.description}
-                                </p>
-                            )}
+                {uploadedVideos.length > 0 ? (
+                    uploadedVideos.map((video) => (
+                        <div key={video.id}>
+                            <h1 className="text-4xl font-bold mb-8">
+                                {video.title}
+                            </h1>
+                            <div className="w-full max-w-3xl">
+                                <video controls className="w-full rounded-xl">
+                                    <source
+                                        src={video.video_path}
+                                        type="video/mp4"
+                                    />
+                                    Your browser does not support the video tag.
+                                </video>
+                                {video.description && (
+                                    <p className="text-gray-700 text-lg mt-4">
+                                        {video.description}
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                ) : (
+                    <p className="text-center text-gray-500 text-lg mt-4">
+                        No hay videos
+                    </p>
+                )}
             </section>
         </main>
     );

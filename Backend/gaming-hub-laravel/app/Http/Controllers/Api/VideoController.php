@@ -99,7 +99,7 @@ class VideoController extends Controller
         if ($videos->isEmpty()) {
             return response()->json([
                 'message' => 'No uploaded videos'
-            ], 404);
+            ], 200);
         }
 
         // Devolver el video en formato JSON
