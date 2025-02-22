@@ -10,6 +10,7 @@ interface GameDetails {
     description: string;
     background_image: string;
     released: string;
+    // platforms: string[];
 }
 
 interface GameEditions {
@@ -30,6 +31,14 @@ interface Video {
     dislikes: number;
 }
 
+interface Achievement {
+    id: number;
+    name: string;
+    description: string;
+    image?: string;
+    percent: number;
+}
+
 export default function GameDetails({
     params,
 }: {
@@ -40,6 +49,7 @@ export default function GameDetails({
     const [fullDescription, setFullDescription] = useState<string>("");
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [gameEditions, setGameEditions] = useState<GameEditions[]>([]);
+    const [gameAchievments, setGameAchievments] = useState<Achievement[]>([]);
     const [uploadedVideos, setUploadedVideos] = useState<Video[]>([]);
     const [error, setError] = useState<string | null>(null);
 
@@ -58,9 +68,13 @@ export default function GameDetails({
                 if (!response.ok)
                     throw new Error("Failed to fetch game details");
                 const data = await response.json();
-                setGameDetails(data);
-                setFullDescription(sanitizeDescription(data.description));
-                fetchUploadedVideos(data.id);
+                console.log("DETALLES:", data);
+
+                setGameDetails(data); // Guardamos los juegos
+                setFullDescription(sanitizeDescription(data.description)); // Guardamos la descripción sin las etiquetas HTML
+                fetchUploadedVideos(data.id); // Hacemos el fetch para ver los videos que hay subidos de este juego
+                fetchGameAchievments(data.id); // Hacemos el fetch para saber los logros de este juego
+                // https://api.rawg.io/api/games/{id}/achievements
             } catch (error) {
                 console.error(error);
                 setError("Failed to load game details");
@@ -79,6 +93,23 @@ export default function GameDetails({
             } catch (error) {
                 console.error(error);
                 setError("Failed to load game editions");
+            }
+        }
+
+        async function fetchGameAchievments(gameId: number) {
+            try {
+                const response = await fetch(
+                    `https://api.rawg.io/api/games/${gameId}/achievements?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`
+                );
+                if (!response.ok)
+                    throw new Error("Failed to fetch game achievments");
+                const data = await response.json();
+                console.log("ACHIEVMENTS: ", data);
+
+                setGameAchievments(data.results || []);
+            } catch (error) {
+                console.error(error);
+                setError("Failed to load game achievments");
             }
         }
 
@@ -218,6 +249,49 @@ export default function GameDetails({
                 ) : (
                     <p className="text-center text-gray-500 text-lg mt-4">
                         No hay videos
+                    </p>
+                )}
+            </section>
+
+            <section className="flex flex-col items-center py-12 px-6">
+                {/* Título con efecto de degradado */}
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
+                    ACHIEVEMENTS
+                </h1>
+
+                {gameAchievments.length > 0 ? (
+                    <div className="w-full flex flex-col items-center gap-10">
+                        {gameAchievments.map((achievement) => (
+                            <div
+                                key={achievement.id}
+                                className="w-full max-w-2xl bg-gray-800 text-white p-6 rounded-lg shadow-lg flex flex-col items-center"
+                            >
+                                {/* Nombre del logro */}
+                                <h2 className="text-3xl font-bold text-center mb-4">
+                                    {achievement.name}
+                                </h2>
+
+                                {/* Imagen con bordes y sombras */}
+                                <div className="w-full flex justify-center">
+                                    <img
+                                        src={achievement.image}
+                                        alt={achievement.name}
+                                        className="w-full max-w-md rounded-lg shadow-md"
+                                    />
+                                </div>
+
+                                {/* Descripción opcional */}
+                                {achievement.description && (
+                                    <p className="text-gray-300 text-lg text-center mt-4">
+                                        {achievement.description}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-center text-gray-500 text-lg mt-4">
+                        There's no available achievements
                     </p>
                 )}
             </section>

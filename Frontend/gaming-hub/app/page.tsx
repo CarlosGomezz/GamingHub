@@ -2,14 +2,15 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Game, GameCard } from "./components/gameCard/gameCard.component";
 
-interface Game {
-    id: number;
-    name: string;
-    description: string;
-    background_image: string;
-    released: string;
-}
+// interface Game {
+//     id: number;
+//     name: string;
+//     description: string;
+//     background_image: string;
+//     released: string;
+// }
 
 export default function Home() {
     const [allGames, setAllGames] = useState<Game[]>([]);
@@ -41,7 +42,13 @@ export default function Home() {
             const data = await response.json();
             console.log(data.results);
 
-            setAllGames((prevGames) => [...prevGames, ...data.results]);
+            setAllGames((prevGames) => {
+                const newGames = data.results.filter(
+                    (game: Game) =>
+                        !prevGames.some((prevGame) => prevGame.id === game.id)
+                );
+                return [...prevGames, ...newGames];
+            });
             setNextPageUrl(data.next); // Update the next page URL
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -60,55 +67,28 @@ export default function Home() {
             <h1 className="text-4xl font-bold text-center pb-10 p-5">
                 Gaming Hub
             </h1>
-            <div className="flex flex-col items-center justify-center">
-                {/* <Image
+            {/* <div className="flex flex-col items-center justify-center">
+                <Image
                     src="/images/gaming-hub-logo.png"
                     alt="Gaming Hub Logo"
                     width={200}
                     height={200}
-                /> */}
-                {/* <p className="text-lg text-center">Welcome to Gaming Hub</p> */}
-            </div>
+                />
+                <p className="text-lg text-center">Welcome to Gaming Hub</p>
+            </div> */}
 
-            {/* BOTÓN DE REPRODUCIR VÍDEO */}
-            <Link
-                href={{
-                    pathname: `/listVideos`, // Ajustamos para usar el ID en la ruta
-                }}
-                // onClick={() => showGameModal(game)}
-                className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
-            >
-                <div>
-                    <h2> REPRODUCIR VIDEO</h2>
+            {allGames.map((game, id) => (
+                <div key={game.id}>
+                    <GameCard
+                        key={game.id}
+                        id={game.id}
+                        name={game.name}
+                        platforms={game.platforms}
+                        background_image={game.background_image}
+                        released={game.released}
+                    />
                 </div>
-            </Link>
-
-            {/* <Link href={`/game`}>View Games</Link> */}
-
-            <div className="flex flex-wrap justify-center gap-4">
-                {allGames.map((game, id) => (
-                    <Link
-                        href={{
-                            pathname: `/games/${game.id}`, // Ajustamos para usar el ID en la ruta
-                        }}
-                        key={id}
-                        className="flex flex-col w-2/5 md:w-1/4 lg:w-1/5 items-center justify-center bg-gray-800 m-2 p-4 rounded transition-transform transform hover:scale-105 hover:cursor-pointer"
-                    >
-                        <div>
-                            <h2 className="text-2xl font-bold">{game.name}</h2>
-                            <Image
-                                src={game.background_image}
-                                alt={game.name}
-                                width={300}
-                                height={300}
-                            />
-                            <p className="text-lg text-center">
-                                {game.released}
-                            </p>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            ))}
 
             {loading && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -148,35 +128,6 @@ export default function Home() {
             <footer className="text-center text-sm">
                 <p>&copy; 2024 Gaming Hub</p>
             </footer>
-
-            {showModal && selectedGame && (
-                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-4 rounded text-black max-w-lg w-full">
-                        <h2 className="text-2xl font-bold">
-                            {selectedGame.name}
-                        </h2>
-                        <p className="text-lg">{selectedGame.id}</p>
-                        <p className="text-lg">{selectedGame.description}</p>
-                        <Image
-                            src={selectedGame.background_image}
-                            alt={selectedGame.name}
-                            width={500}
-                            height={500}
-                            layout="intrinsic" // Cambiado de responsive a intrinsic
-                            className="max-w-full h-auto"
-                        />
-                        <p className="text-lg text-center">
-                            {selectedGame.released}
-                        </p>
-                        <button
-                            onClick={() => setShowModal(false)}
-                            className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
         </main>
     );
 }
