@@ -49,9 +49,10 @@ export default function GameDetails({
     const [fullDescription, setFullDescription] = useState<string>("");
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [gameEditions, setGameEditions] = useState<GameEditions[]>([]);
-    const [gameAchievments, setGameAchievments] = useState<Achievement[]>([]);
+    const [gameAchievements, setGameAchievements] = useState<Achievement[]>([]);
     const [uploadedVideos, setUploadedVideos] = useState<Video[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [nextPage, setNextPage] = useState<string | null>(null);
 
     const toggleDescription = () => setShowFullDescription((prev) => !prev);
 
@@ -59,7 +60,27 @@ export default function GameDetails({
         return DOMPurify.sanitize(description, { ALLOWED_TAGS: [] });
     }
 
+    const loadMoreAchievements = async () => {
+        if (!nextPage) return;
+
+        try {
+            const response = await fetch(nextPage);
+            if (!response.ok)
+                throw new Error("Failed to fetch more achievements");
+
+            const data = await response.json();
+            setGameAchievements((prev) => [...prev, ...data.results]); // Agregar nuevos logros a los anteriores
+            setNextPage(data.next); // Actualizar la URL para la próxima carga
+        } catch (error) {
+            console.error(error);
+            setError("Failed to load more achievements");
+        }
+    };
+
     useEffect(() => {
+        /**
+         * FUNCIÓN PARA CONSEGUIR LOS DETALLES DE UN JUEGO
+         */
         async function fetchGameDetails() {
             try {
                 const response = await fetch(
@@ -73,7 +94,7 @@ export default function GameDetails({
                 setGameDetails(data); // Guardamos los juegos
                 setFullDescription(sanitizeDescription(data.description)); // Guardamos la descripción sin las etiquetas HTML
                 fetchUploadedVideos(data.id); // Hacemos el fetch para ver los videos que hay subidos de este juego
-                fetchGameAchievments(data.id); // Hacemos el fetch para saber los logros de este juego
+                fetchGameAchievements(data.id); // Hacemos el fetch para saber los logros de este juego
                 // https://api.rawg.io/api/games/{id}/achievements
             } catch (error) {
                 console.error(error);
@@ -81,6 +102,9 @@ export default function GameDetails({
             }
         }
 
+        /**
+         * FUNCIÓN PARA CONSEGUIR LAS EDICIONES DE UN JUEGO
+         */
         async function fetchGameEditions() {
             try {
                 const response = await fetch(
@@ -96,23 +120,52 @@ export default function GameDetails({
             }
         }
 
-        async function fetchGameAchievments(gameId: number) {
+        /**
+         * FUNIÓN PARA CONSEGUIR LOS LOGROS DE UN JUEGO
+         * @param gameId
+         * @returns
+         */
+        async function fetchGameAchievements(gameId: number) {
             try {
                 const response = await fetch(
-                    `https://api.rawg.io/api/games/${gameId}/achievements?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}`
+                    `https://api.rawg.io/api/games/${gameId}/achievements?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}&page=1`
                 );
-                if (!response.ok)
-                    throw new Error("Failed to fetch game achievments");
-                const data = await response.json();
-                console.log("ACHIEVMENTS: ", data);
 
-                setGameAchievments(data.results || []);
+                if (!response.ok)
+                    throw new Error("Failed to fetch game achievements");
+                const data = await response.json();
+                console.log("ACHIEVEMENTS: ", data);
+
+                // Si hay 10 o menos logros, cargamos solo esos
+                if (data.count <= 10) {
+                    setGameAchievements(data.results || []);
+                    return;
+                }
+
+                // Si hay entre 11 y 20 logros, hacemos una segunda petición
+                if (data.count <= 20 && data.next) {
+                    const response2 = await fetch(data.next);
+                    if (!response2.ok)
+                        throw new Error("Failed to fetch more achievements");
+                    const data2 = await response2.json();
+
+                    setGameAchievements([...data.results, ...data2.results]);
+                    return;
+                }
+
+                // Si hay más de 20 logros, solo guardamos los primeros 10 y mostramos el botón "Cargar más"
+                setGameAchievements(data.results || []);
+                setNextPage(data.next); // Guardamos la URL de la siguiente página
             } catch (error) {
                 console.error(error);
-                setError("Failed to load game achievments");
+                setError("Failed to load game achievements");
             }
         }
 
+        /**
+         * FUNCIÓN PARA VER LOS VIDEOS QUE HAY SUBIDOS DE UN JUEGO
+         * @param gameId
+         */
         async function fetchUploadedVideos(gameId: number) {
             try {
                 const response = await fetch(
@@ -139,8 +192,33 @@ export default function GameDetails({
     }, [params.gameId]);
 
     if (error) return <p className="text-red-500">{error}</p>;
-    if (!gameDetails) return <p>Loading...</p>;
-
+    // if (!gameDetails) return <div className="animate-spin"></div>;
+    if (!gameDetails) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div
+                    role="status"
+                    className="flex items-center justify-center mt-20"
+                >
+                    <svg
+                        aria-hidden="true"
+                        className="inline-flex w-8 h-8 text-gray-200 animate-spin fill-blue-600"
+                        viewBox="0 0 100 101"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                            fill="currentColor"
+                        />
+                        <path
+                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                            fill="currentFill"
+                        />
+                    </svg>
+                </div>
+            </div>
+        );
+    }
     return (
         <main className="text-white bg-gray-950 p-2">
             <section className="w-full h-1/3 space-y-4">
@@ -196,8 +274,6 @@ export default function GameDetails({
                                         <img
                                             src={edition.background_image}
                                             alt={edition.name}
-                                            // layout="fill"
-                                            // objectFit="cover"
                                             className="rounded-t-xl"
                                         />
                                     ) : (
@@ -259,9 +335,9 @@ export default function GameDetails({
                     ACHIEVEMENTS
                 </h1>
 
-                {gameAchievments.length > 0 ? (
+                {gameAchievements.length > 0 ? (
                     <div className="w-full flex flex-col items-center gap-10">
-                        {gameAchievments.map((achievement) => (
+                        {gameAchievements.map((achievement) => (
                             <div
                                 key={achievement.id}
                                 className="w-full max-w-2xl bg-gray-800 text-white p-6 rounded-lg shadow-lg flex flex-col items-center"
@@ -288,6 +364,16 @@ export default function GameDetails({
                                 )}
                             </div>
                         ))}
+
+                        {/* Botón "Cargar más" si hay más logros */}
+                        {nextPage && (
+                            <button
+                                onClick={() => loadMoreAchievements()}
+                                className="mt-6 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition duration-200 shadow-md"
+                            >
+                                Load More Achievements
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <p className="text-center text-gray-500 text-lg mt-4">
