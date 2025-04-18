@@ -4,13 +4,25 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import DOMPurify from "dompurify";
 
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+
+import AchievementCard from "../../components/achievementsCard/achievementsCard.component";
+
 interface GameDetails {
     id: number;
     name: string;
     description: string;
     background_image: string;
     released: string;
-    // platforms: string[];
+    developers: {
+        id: number;
+        name: string;
+        games_count: number;
+        image_background: string;
+        slug: string;
+    }[];
 }
 
 interface GameEditions {
@@ -53,6 +65,7 @@ export default function GameDetails({
     const [uploadedVideos, setUploadedVideos] = useState<Video[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [nextPage, setNextPage] = useState<string | null>(null);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
 
     const toggleDescription = () => setShowFullDescription((prev) => !prev);
 
@@ -75,6 +88,10 @@ export default function GameDetails({
             console.error(error);
             setError("Failed to load more achievements");
         }
+    };
+
+    const handleExpand = (id: number) => {
+        setExpandedId((prevId) => (prevId === id ? null : id));
     };
 
     useEffect(() => {
@@ -139,6 +156,8 @@ export default function GameDetails({
                 // Si hay 10 o menos logros, cargamos solo esos
                 if (data.count <= 10) {
                     setGameAchievements(data.results || []);
+                    console.log("LOGROS: ", data.results);
+
                     return;
                 }
 
@@ -238,10 +257,17 @@ export default function GameDetails({
                         {gameDetails.released}
                     </span>
                 </p>
+                <div>
+                    <h1 className="text-3xl font-bold">DEVELOPERS</h1>
+                    {gameDetails.developers.map((developer, index) => (
+                        <div key={developer.id}>{developer.name}</div>
+                    ))}
+                </div>
 
                 {/* DESCRIPCIÓN */}
                 <div className="">
-                    <p className="text-lg text-gray-300 leading-relaxed mt-6">
+                    <h1 className="text-3xl font-bold">DESCRIPTION</h1>
+                    <p className="text-lg text-gray-300 leading-relaxed">
                         {showFullDescription
                             ? fullDescription
                             : fullDescription.slice(0, 300) + "..."}
@@ -331,37 +357,26 @@ export default function GameDetails({
 
             <section className="flex flex-col items-center py-12 px-6">
                 {/* Título con efecto de degradado */}
-                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
+                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
                     ACHIEVEMENTS
                 </h1>
 
                 {gameAchievements.length > 0 ? (
                     <div className="w-full flex flex-col items-center gap-10">
                         {gameAchievements.map((achievement) => (
-                            <div
-                                key={achievement.id}
-                                className="w-full max-w-2xl bg-gray-800 text-white p-6 rounded-lg shadow-lg flex flex-col items-center"
-                            >
-                                {/* Nombre del logro */}
-                                <h2 className="text-3xl font-bold text-center mb-4">
-                                    {achievement.name}
-                                </h2>
-
-                                {/* Imagen con bordes y sombras */}
-                                <div className="w-full flex justify-center">
-                                    <img
-                                        src={achievement.image}
-                                        alt={achievement.name}
-                                        className="w-full max-w-md rounded-lg shadow-md"
-                                    />
-                                </div>
-
-                                {/* Descripción opcional */}
-                                {achievement.description && (
-                                    <p className="text-gray-300 text-lg text-center mt-4">
-                                        {achievement.description}
-                                    </p>
-                                )}
+                            <div key={achievement.id}>
+                                <AchievementCard
+                                    key={achievement.id}
+                                    id={achievement.id}
+                                    name={achievement.name}
+                                    image={
+                                        achievement.image ||
+                                        "/placeholder-image.png"
+                                    } // Imagen predeterminada si no hay imagen
+                                    description={achievement.description}
+                                    expanded={expandedId === achievement.id}
+                                    onChange={handleExpand}
+                                />
                             </div>
                         ))}
 
