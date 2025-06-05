@@ -86,6 +86,7 @@ export default function Home() {
                         platforms={game.platforms}
                         background_image={game.background_image}
                         released={game.released}
+                        rating={game.rating}
                     />
                 </div>
             ))}

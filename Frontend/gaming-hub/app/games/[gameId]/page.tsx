@@ -9,47 +9,16 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 
 import AchievementCard from "../../components/achievementsCard/achievementsCard.component";
+import ErrorPopup from "@/app/components/errorPopup/errorPopup.component";
+import SuccessPopup from "@/app/components/successPopup/successPopup.component";
+// import { GameDetails, GameEditions, Achievement, Video } from "./gameInterfaces";
 
-interface GameDetails {
-    id: number;
-    name: string;
-    description: string;
-    background_image: string;
-    released: string;
-    developers: {
-        id: number;
-        name: string;
-        games_count: number;
-        image_background: string;
-        slug: string;
-    }[];
-}
-
-interface GameEditions {
-    id: number;
-    name: string;
-    background_image: string;
-}
-
-interface Video {
-    id: number;
-    creator: number;
-    game: number;
-    title: string;
-    description?: string;
-    date: Date;
-    video_path: string;
-    likes: number;
-    dislikes: number;
-}
-
-interface Achievement {
-    id: number;
-    name: string;
-    description: string;
-    image?: string;
-    percent: number;
-}
+import type {
+    GameDetails,
+    GameEditions,
+    Achievement,
+    Video,
+} from "./gameInterfaces";
 
 export default function GameDetails({
     params,
@@ -186,6 +155,10 @@ export default function GameDetails({
          * @param gameId
          */
         async function fetchUploadedVideos(gameId: number) {
+            console.log("Fetching videos for game ID:", gameId);
+
+            console.log("URL:", `${laravelURL}/api/listVideosGame`);
+
             try {
                 const response = await fetch(
                     `${laravelURL}/api/listVideosGame`,
@@ -210,7 +183,7 @@ export default function GameDetails({
         fetchGameEditions();
     }, [params.gameId]);
 
-    if (error) return <p className="text-red-500">{error}</p>;
+    // if (error) return <p className="text-red-500">{error}</p>;
     // if (!gameDetails) return <div className="animate-spin"></div>;
     if (!gameDetails) {
         return (
@@ -239,53 +212,80 @@ export default function GameDetails({
         );
     }
     return (
-        <main className="text-white bg-gray-950 p-2">
-            <section className="w-full h-1/3 space-y-4">
-                <div className="relative w-full h-full bg-red-500 rounded-xl shadow-xl">
+        <main className="text-white bg-gray-950 min-h-screen p-4 sm:p-8">
+            {/* Notificaciones */}
+            <ErrorPopup error={error} onClose={() => setError(null)} />
+            {/* Portada del juego */}
+            <section className="w-full space-y-6">
+                <Link
+                    href={`/uploadVideo/${gameDetails.id}`}
+                    className="mt-10 px-4 py-2 bg-blue-500 text-white rounded"
+                >
+                    Upload Video
+                </Link>
+                <div className="relative w-full h-72 sm:h-96 bg-gray-800 rounded-2xl overflow-hidden shadow-2xl">
                     <img
                         src={gameDetails.background_image}
                         alt={gameDetails.name}
-                        className="w-full h-full rounded-xl transition-transform duration-300 hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-100">
-                    {gameDetails.name}
-                </h2>
-                <p className="text-md font-medium text-gray-400 mt-4">
-                    Released:{" "}
-                    <span className="font-semibold text-gray-200">
-                        {gameDetails.released}
-                    </span>
-                </p>
-                <div>
-                    <h1 className="text-3xl font-bold">DEVELOPERS</h1>
-                    {gameDetails.developers.map((developer, index) => (
-                        <div key={developer.id}>{developer.name}</div>
-                    ))}
+
+                {/* Nombre y fecha */}
+                <div className="text-center space-y-2">
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-100">
+                        {gameDetails.name}
+                    </h2>
+                    <p className="text-lg italic font-medium text-gray-400">
+                        Released:{" "}
+                        <span className="text-gray-200">
+                            {gameDetails.released.split("-")[0]}
+                        </span>
+                    </p>
                 </div>
 
-                {/* DESCRIPCIÓN */}
-                <div className="">
-                    <h1 className="text-3xl font-bold">DESCRIPTION</h1>
+                {/* Developers */}
+                <div className="text-center space-y-2">
+                    <h3 className="text-3xl font-bold mb-4">DEVELOPERS</h3>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        {gameDetails.developers.map((developer) => (
+                            <span
+                                key={developer.id}
+                                className="bg-gray-800 px-4 py-2 rounded-full text-sm font-semibold shadow hover:bg-gray-700 transition"
+                            >
+                                {developer.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Descripción */}
+                <div className="max-w-4xl mx-auto text-center">
+                    <h3 className="text-3xl font-bold mb-4 mt-8">
+                        DESCRIPTION
+                    </h3>
                     <p className="text-lg text-gray-300 leading-relaxed">
                         {showFullDescription
                             ? fullDescription
                             : fullDescription.slice(0, 300) + "..."}
                     </p>
-                    {/* BOTÓN PARA EXPANDIR Y O REDUCIR LA DESCRIPCIÓN */}
                     {fullDescription.length > 300 && (
                         <button
                             onClick={toggleDescription}
-                            className="text-blue-400 hover:text-blue-300 transition font-semibold mt-2"
+                            className="text-blue-400 hover:text-blue-300 font-semibold mt-4 transition"
                         >
                             {showFullDescription ? "Read less" : "Read more"}
                         </button>
                     )}
                 </div>
             </section>
+
+            {/* Separador */}
             <div className="my-12 border-t border-gray-800 mx-auto w-3/4"></div>
-            <section className="max-w-6xl mx-auto">
-                <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
+
+            {/* Editions */}
+            <section className="max-w-6xl mx-auto text-center">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-12">
                     EDITIONS
                 </h1>
                 {gameEditions.length > 0 ? (
@@ -293,23 +293,21 @@ export default function GameDetails({
                         {gameEditions.map((edition) => (
                             <div
                                 key={edition.id}
-                                className="bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-transform duration-300 transform hover:scale-105 cursor-pointer"
+                                className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 cursor-pointer"
                             >
-                                <div className="relative h-56 w-full">
-                                    {edition.background_image ? (
-                                        <img
-                                            src={edition.background_image}
-                                            alt={edition.name}
-                                            className="rounded-t-xl"
-                                        />
-                                    ) : (
-                                        <div className="bg-gray-700 h-full flex items-center justify-center text-gray-400">
-                                            <p>No image available</p>
-                                        </div>
-                                    )}
-                                </div>
+                                {edition.background_image ? (
+                                    <img
+                                        src={edition.background_image}
+                                        alt={edition.name}
+                                        className="h-56 w-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="h-56 flex items-center justify-center bg-gray-700 text-gray-400">
+                                        No image available
+                                    </div>
+                                )}
                                 <div className="p-5">
-                                    <p className="text-xl font-semibold text-gray-100">
+                                    <p className="text-lg font-semibold text-gray-100">
                                         {edition.name}
                                     </p>
                                 </div>
@@ -317,81 +315,76 @@ export default function GameDetails({
                         ))}
                     </div>
                 ) : (
-                    <p className="text-xl text-gray-400 text-center">
+                    <p className="text-xl text-gray-400">
                         No editions available
                     </p>
                 )}
             </section>
-            <section>
-                <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mt-10 mb-10 text-center">
+
+            {/* Uploaded Videos */}
+            <section className="max-w-4xl mx-auto py-16">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-12 text-center">
                     UPLOADED VIDEOS
                 </h1>
                 {uploadedVideos.length > 0 ? (
                     uploadedVideos.map((video) => (
-                        <div key={video.id}>
-                            <h1 className="text-4xl font-bold mb-8">
+                        <div key={video.id} className="mb-16">
+                            <h2 className="text-3xl font-bold mb-6">
                                 {video.title}
-                            </h1>
-                            <div className="w-full max-w-3xl">
-                                <video controls className="w-full rounded-xl">
+                            </h2>
+                            <div className="w-full overflow-hidden rounded-2xl shadow-lg">
+                                <video controls className="w-full rounded-2xl">
                                     <source
                                         src={video.video_path}
                                         type="video/mp4"
                                     />
                                     Your browser does not support the video tag.
                                 </video>
-                                {video.description && (
-                                    <p className="text-gray-700 text-lg mt-4">
-                                        {video.description}
-                                    </p>
-                                )}
                             </div>
+                            {video.description && (
+                                <p className="text-gray-300 text-lg mt-6">
+                                    {video.description}
+                                </p>
+                            )}
                         </div>
                     ))
                 ) : (
-                    <p className="text-center text-gray-500 text-lg mt-4">
-                        No hay videos
-                    </p>
+                    <p className="text-gray-500 text-center">No hay videos</p>
                 )}
             </section>
 
-            <section className="flex flex-col items-center py-12 px-6">
-                {/* Título con efecto de degradado */}
-                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-10 text-center">
+            {/* Achievements */}
+            <section className="flex flex-col items-center py-20">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 mb-12">
                     ACHIEVEMENTS
                 </h1>
-
                 {gameAchievements.length > 0 ? (
-                    <div className="w-full flex flex-col items-center gap-10">
+                    <div className="w-full flex flex-col items-center gap-12">
                         {gameAchievements.map((achievement) => (
-                            <div key={achievement.id}>
-                                <AchievementCard
-                                    key={achievement.id}
-                                    id={achievement.id}
-                                    name={achievement.name}
-                                    image={
-                                        achievement.image ||
-                                        "/placeholder-image.png"
-                                    } // Imagen predeterminada si no hay imagen
-                                    description={achievement.description}
-                                    expanded={expandedId === achievement.id}
-                                    onChange={handleExpand}
-                                />
-                            </div>
+                            <AchievementCard
+                                key={achievement.id}
+                                id={achievement.id}
+                                name={achievement.name}
+                                image={
+                                    achievement.image ||
+                                    "/placeholder-image.png"
+                                }
+                                description={achievement.description}
+                                expanded={expandedId === achievement.id}
+                                onChange={handleExpand}
+                            />
                         ))}
-
-                        {/* Botón "Cargar más" si hay más logros */}
                         {nextPage && (
                             <button
-                                onClick={() => loadMoreAchievements()}
-                                className="mt-6 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition duration-200 shadow-md"
+                                onClick={loadMoreAchievements}
+                                className="mt-10 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow-lg transition-transform transform hover:scale-105"
                             >
                                 Load More Achievements
                             </button>
                         )}
                     </div>
                 ) : (
-                    <p className="text-center text-gray-500 text-lg mt-4">
+                    <p className="text-gray-500 text-lg text-center">
                         There's no available achievements
                     </p>
                 )}

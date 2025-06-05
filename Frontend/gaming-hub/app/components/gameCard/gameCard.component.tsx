@@ -19,6 +19,7 @@ export interface Game {
     }[];
     background_image: string;
     released: string;
+    rating: number;
 }
 
 // interface Platform {
@@ -29,7 +30,7 @@ export interface Game {
 // }
 
 export function GameCard(props: Game) {
-    const { id, name, platforms, background_image, released } = props;
+    const { id, name, platforms, background_image, released, rating } = props;
     const platformOrder = [
         "PC",
         "PlayStation",
@@ -43,27 +44,27 @@ export function GameCard(props: Game) {
     ];
 
     return (
-        <div className="flex flex-wrap justify-center gap-16 px-6 py-4">
-            {/* {" "} */}
-            {/* Más espacio entre tarjetas */}
+        <div className="flex flex-wrap justify-center gap-12 px-8 py-6">
             <Link
                 href={`/games/${id}`}
                 key={id}
-                className="flex flex-col w-full md:w-1/3 lg:w-1/4 xl:w-1/5 bg-gray-900 text-white rounded-lg shadow-lg p-5 transition-transform transform hover:scale-105 hover:shadow-xl"
+                className="flex flex-col w-full md:w-1/3 lg:w-1/4 xl:w-1/5 bg-gray-900 text-white rounded-2xl shadow-md hover:shadow-2xl transition-transform transform hover:scale-105 p-4 overflow-hidden"
             >
                 {/* Imagen del juego */}
-                <div className="w-full overflow-hidden rounded-lg">
+                <div className="relative w-full h-48 rounded-xl overflow-hidden">
                     <img
                         src={background_image}
                         alt={name}
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
                     />
                 </div>
 
-                {/* Nombre y fecha de lanzamiento */}
-                <div className="text-center mt-4">
-                    <h2 className="text-xl font-bold">{name}</h2>
-                    <p className="text-gray-400 text-sm mt-1">{released}</p>
+                {/* Nombre y Rating */}
+                <div className="text-center mt-4 space-y-1">
+                    <h2 className="text-lg font-bold truncate">{name}</h2>
+                    <p className="text-yellow-400 text-sm flex items-center justify-center gap-1">
+                        ⭐ {rating.toFixed(1)}
+                    </p>
                 </div>
 
                 {/* Plataformas */}
@@ -74,14 +75,21 @@ export function GameCard(props: Game) {
                                 platformOrder.indexOf(a.platform.name) -
                                 platformOrder.indexOf(b.platform.name)
                         )
-                        .map((platformEntry, id) => (
+                        .map((platformEntry, idx) => (
                             <span
-                                key={id}
-                                className="bg-gray-700 text-xs px-3 py-1 rounded-full"
+                                key={idx}
+                                className="bg-gray-800 text-gray-300 text-xs font-medium px-3 py-1 rounded-full"
                             >
                                 {platformEntry.platform.name}
                             </span>
                         ))}
+                </div>
+
+                {/* Fecha de lanzamiento */}
+                <div className="flex justify-end mt-4">
+                    <p className="text-gray-400 text-xs italic">
+                        Released: {released.split("-")[0]}
+                    </p>
                 </div>
             </Link>
         </div>
