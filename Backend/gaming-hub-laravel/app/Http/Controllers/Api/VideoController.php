@@ -40,6 +40,7 @@ class VideoController extends Controller
         try {
             $videoPath = $videoFile->storeAs('videos', $videoFileName, 'public');
             $videoUrl = asset('storage/videos/' . $videoFileName);
+            // $videoUrl = 'storage/videos/' . $videoFileName;
 
             // Creación del modelo Video
             $video = new Video();
