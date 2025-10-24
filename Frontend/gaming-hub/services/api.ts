@@ -1,5 +1,7 @@
 "use client";
 
+import { rawgioEndpoints } from "./endpoints";
+
 export const RAWGIO_CONFIG = {
     BASE_URL: "https://rawg.io/api",
     API_KEY: process.env.NEXT_PUBLIC_RAWG_API_KEY,
@@ -9,13 +11,14 @@ export const RAWGIO_CONFIG = {
     },
 };
 
-export const fetchGameAchievements = async ({ gameId }: { gameId: number }) => {
-    const endpoint = gameId
-        ? `${RAWGIO_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(
-              gameId
-          )}`
-        : `${RAWGIO_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc`;
+export const fetchGameAchievements = async (gameId: number) => {
+    const endpoint = rawgioEndpoints.gameAchievements(gameId.toString());
+    // ? `${RAWGIO_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(
+    //       gameId
+    //   )}`
+    // : `${RAWGIO_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc`;
 
+    console.log("jeejeje SUUUU");
     const response = await fetch(endpoint, {
         method: "GET",
         headers: RAWGIO_CONFIG.headers,

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import DOMPurify from "dompurify";
 
@@ -22,9 +22,9 @@ import { fetchGameAchievements } from "@/services/api";
 export default function GameDetails({
     params,
 }: {
-    params: { gameId: string };
+    params: Promise<{ gameId: string }>;
 }) {
-    const gameId = params.gameId;
+    const { gameId } = use(params);
     const laravelURL = process.env.NEXT_PUBLIC_LARAVEL_URL;
     const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
     const [fullDescription, setFullDescription] = useState<string>("");
